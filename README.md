@@ -11,14 +11,14 @@
 
 </br>
 
-* Student
+* Authorized (student)
   * All Guest functionality
   * View lesson schedule
   * View his own grades
     
 </br>
 
-* Teacher
+* Staff (teacher)
   * All Guest functionality
   * View his own schedule
   * Give grades to students
@@ -159,7 +159,7 @@
 
 
 ## teacher
-1. `user_id INT` - PK
+1. `id INT` - PK
 
 * OneToOne to "user"
 * OneToOne to "class"
@@ -170,7 +170,7 @@
 
 
 ## student
-1. `user_id INT` - PK
+1. `id INT` - PK
 
 * OneToOne to "user"
 * ManyToOne to "class"
