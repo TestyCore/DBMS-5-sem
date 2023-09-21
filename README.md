@@ -1,89 +1,205 @@
 **Tatarinov Vyacheslav 153503**
 # School
 
-## Functional requirements
-* Guest:
-  * Registration.
-  * Authorization.
-  * View published news and announcements.
-  * View school staff.
-  * View information about the school.
-* Student:
+# Functional requirements
+* Guest
+  * Registration
+  * Authorization
+  * View published news and announcements
+  * View school staff
+  * View information about the school
+
+</br>
+
+* Student
   * All Guest functionality
-  * View lesson schedule.
-  * View his own grades.
-* Teacher:
-  * All Guest functionality.
-  * View his own schedule.
-  * Give grades to students.
-* Administrator:
-  * Edit information about the school.
-  * Edit student and teacher personal info.
-  * Create and edit lesson schedule.
-  * Publish news and announcements.
-  * View teachers and students logs.
+  * View lesson schedule
+  * View his own grades
+    
+</br>
+
+* Teacher
+  * All Guest functionality
+  * View his own schedule
+  * Give grades to students
+
+</br>
+
+* Administrator
+  * Edit information about the school
+  * Edit student and teacher personal info
+  * Create and edit lesson schedule
+  * Publish news and announcements
+  * View teachers and students logs
+
+</br>
+</br>
+
+# Entities
+## user
+1. `id INT` - PK
+2. `first_name VARCHAR(45)` - user's first name
+3. `last_name VARCHAR(45)` - user's last name
+4. `username VARCHAR(30)` - user's username
+5. `password VARCHAR(50)` - user's password
+6. `email VARCHAR(255)` - user's email
+7. `is_staff TINYINT(1)` - user's status option, assigned to user during registration
+8. `is_superuser TINYINT(1)` - user's status option, assigned to user during registration
+
+* OneToMany to "review"
+* OneToMany to "article"
+* OneToMany to "journal"
+* OneToOne to "student"
+* OneToOne to "teacher"
+  </br>
+  </br>
+  </br>
+
+  
+## event
+1. `id INT` - PK
+2. `title VARCHAR(255)` - event title
+3. `date DATETIME` - time of the event
+4. `place VARCHAR(255)` - place of the event
+
+* ManyToMany to "class"
+  </br>
+  </br>
+  </br>
 
 
+## class
+1. `id INT` - PK
+2. `name VARCHAR(10)` - name of the particular class (ex. 7"A", 11"B")
 
-## Description
-#### User:
-1. `Id (int)` - PK.
-2. `First_name (char)` - User's first name.
-3. `Last_name (char)` - User's last name.
-4. `Second_name (char)` - User's second name.
-5. `Email (char)` - User's email.
-6. `Age (int)` - User's age.
-7. `Role (FK)` -  User's role. "MTO" to Role Table.
+* ManyToMany to "event"
+* OneToMany to "timetable"
+* OneToMany to "student"
+* OneToOne to "teacher"
+  </br>
+  </br>
+  </br>
 
-#### Role:
-1. `Id (int)` - PK.
-2. `Name (char)` - Role that is assigned to user during registration.
+  
+## article
+1. `id INT` - PK
+2. `title VARCHAR(255)` - article title
+4. `date DATE` - article publishing date
+5. `content TEXT` - information provided in the article
 
-#### Event:
-1. `Id (int)` - PK. "MTM" to Class Table.
-2. `Title (char)` - Event title.
-3. `DateTime (datetime)` - Time of the event.
-4. `Place (char)` - Place of the event.
+* ManyToOne to "user"
+  </br>
+  </br>
+  </br>
 
-#### Class:
-1. `Id (int)` - PK. "MTM" to Class Table.  "OTO" to User Table (One class can have only one classroom teacher and vice versa)
-2. `Name (char)` - Name of the particular class (ex. 7"A", 11"B").  
 
-#### Article:
-1. `Id (int)` - PK.
-2. `Title (char)` - Article title.
-3. `Author (FK)` - Article author (student or teacher). "MTO" to User Table.
-4. `Date (date)` - Article publishing date.
-5. `Content (char)` - Information provided in the article.
+## cabinet
+1. `id INT` - PK
+2. `name INT` - cabinet number at school
 
-#### Cabinet:
-1. `Id (int)` - PK.
-2. `Name (int)` - cabinet number at school.
-   
-#### Subject:
-1. `Id (int)` - PK.
-2. `Subject (char)` - Name of subject learned at school.
+* OneToMany to "timetable"
+  </br>
+  </br>
+  </br>
 
-#### Review:
-1. `Id (int)` - PK.
-2. `User (FK)` - User that left a review. "MTO" to User Table.
-3. `Date (date)` - Date when user left a review.
-4. `Content (char)` - Information that user write in a review.
-5. `Rate (int)` - User's rate.
 
-#### Calls_time:
-1. `Id (int)` - PK.
-2. `Time (time)` - School call schedule.
+## subject
+1. `id INT` - PK
+2. `name VARCHAR(40)` - name of subject learned at school
 
-#### Journal:
-1. `Id (int)` - PK.
-2. `User (FK)` - User whos actions were logged. "MTO" to User Table.
-3. `Datetime (datetime)` - Datetime when user's actions where logged.
-4. `Action_type (FK)` - Type of action that was logged. "MTO" to Action_type Table
+* OneToMany to "timetable"
+* OneToMany to "teacher"
+  </br>
+  </br>
+  </br>
 
-#### Action_type:
-1. `Id (int)` - PK.
-2. `Name (char)` - Type of action that is logged.
+
+## review
+1. `id INT` - PK
+3. `date DATE` - date when user left a review
+4. `content TEXT` - information that user write in a review
+5. `rate INT` -  rate that user left
+
+* ManyToOne to "user"
+  </br>
+  </br>
+  </br>
+
+
+## lesson_time
+1. `id INT` - PK
+2. `time_start TIME` - lesson start time
+3. `time_end TIME` - lessont end time
+
+* OneToMany to "timetable"
+  </br>
+  </br>
+  </br>
+
+
+## journal
+1. `id INT` - PK
+3. `date DATETIME` - datetime when user's actions been logged
+
+* ManyToOne to "user"
+* ManyToOne to "action_type"
+  </br>
+  </br>
+  </br>
+
+
+## action_type
+1. `id INT` - PK
+2. `name VARCHAR(50)` - type of action that been logged
+
+* OneToMany to "journal"
+  </br>
+  </br>
+  </br>
+
+
+## teacher
+1. `user_id INT` - PK
+
+* OneToOne to "user"
+* OneToOne to "class"
+* ManyToOne to "subject"
+  </br>
+  </br>
+  </br>
+
+
+## student
+1. `user_id INT` - PK
+
+* OneToOne to "user"
+* ManyToOne to "class"
+  </br>
+  </br>
+  </br>
+
+
+## timetable
+1. `id INT` - PK
+
+* ManyToOne to "class"
+* ManyToOne to "day_of_week"
+* ManyToOne to "lesson_time"
+* ManyToOne to "cabinet"
+* ManyToOne to "subject"
+  </br>
+  </br>
+  </br>
+
+
+## day_of_week
+1. `id INT` - PK
+2. `name VARCHAR(15)` - day of week (ex. Tuesday)
+
+* OneToMany to "timetable"
+  </br>
+  </br>
+  </br>
 
    
 
