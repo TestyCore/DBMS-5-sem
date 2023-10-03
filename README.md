@@ -181,28 +181,11 @@
 
 ## timetable
 1. `id INT` - PK
-
+2. `day_of_week VARCHAR(12)` - day of week (ex. Tuesday)
 * ManyToOne to "class"
-* ManyToOne to "day_of_week"
 * ManyToOne to "lesson_time"
 * ManyToOne to "cabinet"
 * ManyToOne to "subject"
   </br>
   </br>
-  </br>
-
-
-## day_of_week
-1. `id INT` - PK
-2. `name VARCHAR(15)` - day of week (ex. Tuesday)
-
-* OneToMany to "timetable"
-  </br>
-  </br>
-  </br>
-
-   
-
-
-
-   
+  </br>   
