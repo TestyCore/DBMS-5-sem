@@ -1,0 +1,14 @@
+insert into salary_region (amount, region) values (1, 'London');
+insert into salary_region (amount, region) values (2, 'Minsk');
+insert into salary_region (amount, region) values (3, 'Tokio');
+insert into salary_region (amount, region) values (4, 'London');
+insert into salary_region (amount, region) values (5, 'London');
+insert into salary_region (amount, region) values (6, 'London');
+insert into salary_region (amount, region) values (7, 'Minsk');
+insert into salary_region (amount, region) values (8, 'Tokio');
+insert into salary_region (amount, region) values (9, 'Tokio');
+insert into salary_region (amount, region) values (10, 'Tokio');
+insert into salary_region (amount, region) values (11, 'Tokio');
+insert into salary_region (amount, region) values (12, 'Tokio');
+insert into salary_region (amount, region) values (13, 'Tokio');
+insert into salary_region (amount, region) values (14, 'Tokio');

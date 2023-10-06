@@ -1,0 +1,13 @@
+insert into subject (name) values ('Belarusian Language');
+insert into subject (name) values ('Belarusian Literature');
+insert into subject (name) values ('Rusian Language');
+insert into subject (name) values ('Rusian Literature');
+insert into subject (name) values ('English');
+insert into subject (name) values ('Maths');
+insert into subject (name) values ('Computer Science');
+insert into subject (name) values ('History');
+insert into subject (name) values ('Geography');
+insert into subject (name) values ('Physics');
+insert into subject (name) values ('Chemistry');
+insert into subject (name) values ('Art');
+insert into subject (name) values ('P.E.');
