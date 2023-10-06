@@ -4,7 +4,7 @@
 # Functional requirements
 * Guest
   * Registration
-  * Authorization
+  * Sign in
   * View published news and announcements
   * View school staff
   * View information about the school
@@ -36,7 +36,7 @@
 </br>
 
 # Entities
-## user
+## users
 1. `id INT` - PK
 2. `first_name VARCHAR(45)` - user's first name
 3. `last_name VARCHAR(45)` - user's last name
@@ -70,7 +70,8 @@
 
 ## class
 1. `id INT` - PK
-2. `name VARCHAR(10)` - name of the particular class (ex. 7"A", 11"B")
+2. `teacher_id INT` - FK references teacher(id)
+3. `name VARCHAR(10)` - name of the particular class (ex. 7"A", 11"B")
 
 * ManyToMany to "event"
 * OneToMany to "timetable"
@@ -84,10 +85,11 @@
 ## article
 1. `id INT` - PK
 2. `title VARCHAR(255)` - article title
+3. `author_id INT` - FK references users(id)
 4. `date DATE` - article publishing date
 5. `content TEXT` - information provided in the article
 
-* ManyToOne to "user"
+* ManyToOne to "users"
   </br>
   </br>
   </br>
@@ -116,11 +118,12 @@
 
 ## review
 1. `id INT` - PK
+2. `author_id INT` - FK references users(id)
 3. `date DATE` - date when user left a review
 4. `content TEXT` - information that user write in a review
 5. `rate INT` -  rate that user left
 
-* ManyToOne to "user"
+* ManyToOne to "users"
   </br>
   </br>
   </br>
@@ -139,9 +142,11 @@
 
 ## journal
 1. `id INT` - PK
+2. `users_id INT` - FK references users(id)
 3. `date DATETIME` - datetime when user's actions been logged
+4. `action_type_id INT` - FK references action_type(id)
 
-* ManyToOne to "user"
+* ManyToOne to "users"
 * ManyToOne to "action_type"
   </br>
   </br>
@@ -160,8 +165,10 @@
 
 ## teacher
 1. `id INT` - PK
+2. `users_id INT` - FK references users(id)
+3. `subject_id INT` - FK references subject(id)
 
-* OneToOne to "user"
+* OneToOne to "users"
 * OneToOne to "class"
 * ManyToOne to "subject"
   </br>
@@ -171,8 +178,10 @@
 
 ## student
 1. `id INT` - PK
+2. `users_id INT` - FK references users(id)
+3. `class_id INT` - FK references class(id)
 
-* OneToOne to "user"
+* OneToOne to "users"
 * ManyToOne to "class"
   </br>
   </br>
@@ -181,7 +190,11 @@
 
 ## timetable
 1. `id INT` - PK
-2. `day_of_week VARCHAR(12)` - day of week (ex. Tuesday)
+2. `class_id INT` - FK references class(id)
+3. `subject_id INT` - FK references subject(id)
+4. `cabinet_id INT` - FK references cabinet(id)
+5. `lesson_time_id INT` - FK references lesson_time(id)
+6. `day_of_week VARCHAR(12)` - day of week (ex. Tuesday)
 * ManyToOne to "class"
 * ManyToOne to "lesson_time"
 * ManyToOne to "cabinet"
