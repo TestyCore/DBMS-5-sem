@@ -1,4 +1,4 @@
--- func to log registration of new user when new user is inserted to "users" table
+-- log actions
 CREATE OR REPLACE PROCEDURE journal_log_proc(id INT, action_id INT)
 LANGUAGE 'plpgsql' AS 
 $$
@@ -8,10 +8,9 @@ BEGIN
 END;
 $$;
 
- -- (clock_timestamp()::text, 'YYYY-MM-DD HH24:MI:SS.MS')
 
 
-
+-- insert new teacher to "teacher" table
 CREATE OR REPLACE PROCEDURE teacher_insert_proc(new_id INT)
 LANGUAGE 'plpgsql' AS 
 $$
@@ -22,6 +21,8 @@ END;
 $$;
 
 
+
+-- insert new student to "student" table
 CREATE OR REPLACE PROCEDURE student_insert_proc(new_id INT)
 LANGUAGE 'plpgsql' AS 
 $$
@@ -38,10 +39,6 @@ CREATE OR REPLACE FUNCTION users_insert_trigger_fnc()
 RETURNS TRIGGER AS
 $$
 BEGIN
-
-    IF NEW.is_staff = true AND NEW.is_superuser = true THEN
-        RAISE EXCEPTION 'Insertion is not allowed for is_staff = true and is_superuser = true';
-    END IF;
 
     IF NEW.is_staff = false AND NEW.is_superuser = false THEN
         CALL student_insert_proc(NEW.id);
@@ -112,7 +109,6 @@ $$
 BEGIN
     NEW.is_staff = false;
     CALL journal_log_proc(NEW.id, 5); -- action_type_id: 5 ('New superuser added')
-    CALL teacher_delete_proc(NEW.id);
     RETURN NEW;
 END;
 $$
@@ -132,7 +128,7 @@ EXECUTE FUNCTION users_update_to_add_superuser_fnc();
 
 
 
--- func to remove user from "users" table when corresponding student is removed from "student" table.
+-- remove user from "users" table when corresponding student been removed from "student" table.
 CREATE OR REPLACE PROCEDURE users_delete_proc(old_id INT)
 LANGUAGE 'plpgsql' AS 
 $$
@@ -181,7 +177,6 @@ $$
 LANGUAGE 'plpgsql';
 
 
--- trigger to delete user from "users" when corresponding student being deleted
 CREATE TRIGGER student_delete_trigger
 AFTER DELETE
 ON "student"
@@ -224,20 +219,11 @@ $$;
 CREATE OR REPLACE FUNCTION teacher_delete_proc_wrapper()
 RETURNS TRIGGER AS
 $$
-DECLARE
-    user_exists BOOLEAN;
 BEGIN
-
-    SELECT TRUE INTO user_exists
-    FROM users
-    WHERE id = OLD.users_id;
 
     CALL journal_log_proc(OLD.users_id, 9); -- action_type_id: 9 ('Staff has been deleted')
     CALL archive_teacher_proc(OLD.users_id);
-
-    IF user_exists THEN
-        CALL users_delete_proc(OLD.users_id);
-    END IF;
+    CALL users_delete_proc(OLD.users_id);
 
     RETURN OLD;
 END;
@@ -245,7 +231,6 @@ $$
 LANGUAGE 'plpgsql';
 
 
--- trigger to delete user from "users" when corresponding student being deleted
 CREATE TRIGGER teacher_delete_trigger
 AFTER DELETE
 ON "teacher"
@@ -259,6 +244,11 @@ EXECUTE PROCEDURE teacher_delete_proc_wrapper();
 
 -- update users set is_superuser = true where id = 1060;
 -- select * from users ORDER BY id DESC LIMIT 10;
+-- select * from student ORDER BY id DESC LIMIT 10;
+-- select * from teacher ORDER BY id DESC LIMIT 10;
+-- select * from journal ORDER BY id DESC LIMIT 10;
+-- select * from staff_archive ORDER BY id DESC LIMIT 10;
+-- select * from student_archive ORDER BY id DESC LIMIT 10;
 -- delete from journal where id = 10;
 -- drop trigger if exists users_add_superuser_trigger on users;
 
