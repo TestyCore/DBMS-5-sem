@@ -1,138 +1,130 @@
 -- func to log registration of new user when new user is inserted to "users" table
-CREATE OR REPLACE FUNCTION users_insert_journal_fnc(new_id INT)
-RETURNS VOID AS 
+CREATE OR REPLACE PROCEDURE journal_log_proc(id INT, action_id INT)
+LANGUAGE 'plpgsql' AS 
 $$
 BEGIN
   INSERT INTO journal (users_id, date, action_type_id)
-  VALUES (new_id, current_timestamp, 4); -- action_type_id: 4 ('New user registered')
+  VALUES (id, current_timestamp, action_id); 
 END;
-$$
-LANGUAGE 'plpgsql';
-
-
--- func to log adding new superuser
-CREATE OR REPLACE FUNCTION users_add_superuser_journal_fnc(new_id INT)
-RETURNS VOID AS 
-$$
-BEGIN
-  INSERT INTO journal (users_id, date, action_type_id)
-  VALUES (new_id, current_timestamp, 5); -- action_type_id: 5 ('New superuser added')
-END;
-$$
-LANGUAGE 'plpgsql';
-
-
--- func to log adding new superuser
-CREATE OR REPLACE FUNCTION users_delete_journal_fnc(old_id INT)
-RETURNS VOID AS 
-$$
-BEGIN
-  INSERT INTO journal (users_id, date, action_type_id)
-  VALUES (old_id, current_timestamp, 7); -- action_type_id: 7 ('User been deleted')
-END;
-$$
-LANGUAGE 'plpgsql';
+$$;
 
  -- (clock_timestamp()::text, 'YYYY-MM-DD HH24:MI:SS.MS')
 
 
 
--- func to insert new user from "users" table to "teacher" table
--- with 'is_staff' = true and 'is_superuser' = false fields. 
-CREATE OR REPLACE FUNCTION users_insert_teacher_fnc(new_id INT)
-RETURNS VOID AS 
+CREATE OR REPLACE PROCEDURE teacher_insert_proc(new_id INT)
+LANGUAGE 'plpgsql' AS 
 $$
 BEGIN
     INSERT INTO teacher (users_id, subject_id)
     VALUES (new_id, 1); -- Belarusian language by default
 END;
-$$
-LANGUAGE 'plpgsql';
+$$;
 
 
-CREATE OR REPLACE FUNCTION users_insert_teacher_fnc_wrapper()
-RETURNS TRIGGER AS
-$$
-BEGIN
-    PERFORM users_insert_teacher_fnc(NEW.id);
-    PERFORM users_insert_journal_fnc(NEW.id);
-    RETURN NEW;
-END;
-$$
-LANGUAGE 'plpgsql';
-
-
--- trigger to insert new teacher to "teacher" table when new user is added to "users" table
-CREATE TRIGGER users_insert_teacher_trigger
-AFTER INSERT
-ON "users"
-FOR EACH ROW
-WHEN (NEW.is_staff = true AND NEW.is_superuser = false)
-EXECUTE PROCEDURE users_insert_teacher_fnc_wrapper();
-
--- Insert example: insert into users (first_name, last_name, username, password, email, is_staff, is_superuser) values ('Sasha', 'Sviridov', 'Andreevich', 'uO1(!ssu6&e84\', 'sviridov6@gmail.com', true, false);
--- ************************************************************************************************************************************************************************************************************************************************
-
-
-
-
-
--- func to insert new user from "users" table to "student" table
--- with 'is_staff' = false and 'is_superuser' = false fields. 
-CREATE OR REPLACE FUNCTION users_insert_student_fnc(new_id INT)
-RETURNS VOID AS 
+CREATE OR REPLACE PROCEDURE student_insert_proc(new_id INT)
+LANGUAGE 'plpgsql' AS 
 $$
 BEGIN
     INSERT INTO student (users_id, class_id)
     VALUES (new_id, 1); -- 1"A" class by default
 END;
-$$
-LANGUAGE 'plpgsql';
+$$;
 
-CREATE OR REPLACE FUNCTION users_insert_student_fnc_wrapper()
+
+
+
+CREATE OR REPLACE FUNCTION users_insert_trigger_fnc()
 RETURNS TRIGGER AS
 $$
 BEGIN
-    PERFORM users_insert_student_fnc(NEW.id);
-    PERFORM users_insert_journal_fnc(NEW.id);
+
+    IF NEW.is_staff = true AND NEW.is_superuser = true THEN
+        RAISE EXCEPTION 'Insertion is not allowed for is_staff = true and is_superuser = true';
+    END IF;
+
+    IF NEW.is_staff = false AND NEW.is_superuser = false THEN
+        CALL student_insert_proc(NEW.id);
+        CALL journal_log_proc(NEW.id, 4); -- action_type_id: 4 ('New student has been registered')
+    ELSIF NEW.is_staff = true AND NEW.is_superuser = false THEN
+        CALL teacher_insert_proc(NEW.id);
+        CALL journal_log_proc(NEW.id, 8); -- action_type_id: 8 ('New staff has been registered')
+    ELSE
+        CALL journal_log_proc(NEW.id, 5); -- action_type_id: 5 ('New superuser has been registered')
+    END IF;
+
     RETURN NEW;
+
 END;
 $$
 LANGUAGE 'plpgsql';
 
--- trigger to insert new student to "student" table when new user is added to "users" table
-CREATE TRIGGER users_insert_student_trigger
+
+CREATE TRIGGER users_insert_trigger
 AFTER INSERT
 ON "users"
 FOR EACH ROW
-WHEN (NEW.is_staff = false AND NEW.is_superuser = false)
-EXECUTE PROCEDURE users_insert_student_fnc_wrapper();
+EXECUTE PROCEDURE users_insert_trigger_fnc();
+
+
+
+
+
+CREATE OR REPLACE FUNCTION users_forbidden_insert_trigger_fnc()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+    IF NEW.is_staff = true AND NEW.is_superuser = true THEN
+        RAISE EXCEPTION 'Insertion is not allowed for is_staff = true and is_superuser = true';
+    END IF;
+
+    RETURN NEW;
+
+END;
+$$
+LANGUAGE 'plpgsql';
+
+CREATE TRIGGER users_forbidden_insert_trigger
+BEFORE INSERT
+ON "users"
+FOR EACH ROW
+EXECUTE PROCEDURE users_forbidden_insert_trigger_fnc();
+
+
 
 -- Insert example: insert into users (first_name, last_name, username, password, email, is_staff, is_superuser) values ('Anton', 'Vorontsov', 'Andreevich', 'uO1(!ssu6&e84\', 'sviridov6@gmail.com', false, false);
 -- ************************************************************************************************************************************************************************************************************************************************
 
 
 
+CREATE OR REPLACE PROCEDURE teacher_delete_proc(old_id INT)
+LANGUAGE 'plpgsql' AS 
+$$
+BEGIN
+    DELETE FROM teacher WHERE users_id = old_id;
+END;
+$$;
 
-
-CREATE OR REPLACE FUNCTION users_add_superuser_fnc()
+CREATE OR REPLACE FUNCTION users_update_to_add_superuser_fnc()
 RETURNS TRIGGER AS
 $$
 BEGIN
     NEW.is_staff = false;
-    PERFORM users_add_superuser_journal_fnc(NEW.id);
+    CALL journal_log_proc(NEW.id, 5); -- action_type_id: 5 ('New superuser added')
+    CALL teacher_delete_proc(NEW.id);
     RETURN NEW;
 END;
 $$
 LANGUAGE 'plpgsql';
 
 
-CREATE TRIGGER users_add_superuser_trigger
+CREATE TRIGGER users_update_to_add_superuser_trigger
 BEFORE UPDATE
 ON "users"
 FOR EACH ROW
 WHEN (OLD.is_staff = true AND OLD.is_superuser = false AND NEW.is_staff = true AND NEW.is_superuser = true)
-EXECUTE FUNCTION users_add_superuser_fnc();
+EXECUTE FUNCTION users_update_to_add_superuser_fnc();
 
 -- ************************************************************************************************************************************************************************************************************************************************
 
@@ -141,18 +133,17 @@ EXECUTE FUNCTION users_add_superuser_fnc();
 
 
 -- func to remove user from "users" table when corresponding student is removed from "student" table.
-CREATE OR REPLACE FUNCTION users_delete_student_fnc(old_id INT)
-RETURNS VOID AS 
+CREATE OR REPLACE PROCEDURE users_delete_proc(old_id INT)
+LANGUAGE 'plpgsql' AS 
 $$
 BEGIN
     DELETE FROM users WHERE id = old_id;
 END;
-$$
-LANGUAGE 'plpgsql';
+$$;
 
 
-CREATE OR REPLACE FUNCTION archive_fnc(old_id INT)
-RETURNS VOID AS 
+CREATE OR REPLACE PROCEDURE archive_student_proc(old_id INT)
+LANGUAGE 'plpgsql' AS 
 $$
 DECLARE
     first_name_cp VARCHAR(50);
@@ -160,7 +151,6 @@ DECLARE
     email_cp VARCHAR(150);
     journal_id_cp INT;
 BEGIN
-    -- Retrieve last_name and email before deleting
     SELECT first_name, last_name, email INTO first_name_cp, last_name_cp, email_cp
     FROM users
     WHERE id = old_id;
@@ -171,33 +161,99 @@ BEGIN
     WHERE users_id = old_id;
 
 
-    INSERT INTO archive (first_name, last_name, email, journal_id)
+    INSERT INTO student_archive (first_name, last_name, email, journal_id)
     VALUES (first_name_cp, last_name_cp, email_cp, journal_id_cp); 
 
 END;
-$$
-LANGUAGE 'plpgsql';
+$$;
 
 
-CREATE OR REPLACE FUNCTION users_delete_student_fnc_wrapper()
+CREATE OR REPLACE FUNCTION student_delete_proc_wrapper()
 RETURNS TRIGGER AS
 $$
 BEGIN
-    PERFORM users_delete_journal_fnc(OLD.users_id);
-    PERFORM archive_fnc(OLD.users_id);
-    PERFORM users_delete_student_fnc(OLD.users_id);
+    CALL journal_log_proc(OLD.users_id, 7); -- action_type_id: 7 ('Student has been deleted')
+    CALL archive_student_proc(OLD.users_id);
+    CALL users_delete_proc(OLD.users_id);
     RETURN OLD;
 END;
 $$
 LANGUAGE 'plpgsql';
 
 
--- trigger to insert new teacher to "teacher" table when new user is added to "users" table
+-- trigger to delete user from "users" when corresponding student being deleted
 CREATE TRIGGER student_delete_trigger
 AFTER DELETE
 ON "student"
 FOR EACH ROW
-EXECUTE PROCEDURE users_delete_student_fnc_wrapper();
+EXECUTE PROCEDURE student_delete_proc_wrapper();
+
+
+
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE archive_teacher_proc(old_id INT)
+LANGUAGE 'plpgsql' AS 
+$$
+DECLARE
+    first_name_cp VARCHAR(50);
+    last_name_cp VARCHAR(50);
+    email_cp VARCHAR(150);
+    journal_id_cp INT;
+BEGIN
+    SELECT first_name, last_name, email INTO first_name_cp, last_name_cp, email_cp
+    FROM users
+    WHERE id = old_id;
+
+
+    SELECT id INTO journal_id_cp
+    FROM journal
+    WHERE users_id = old_id;
+
+
+    INSERT INTO staff_archive (first_name, last_name, email, journal_id)
+    VALUES (first_name_cp, last_name_cp, email_cp, journal_id_cp); 
+
+END;
+$$;
+
+
+CREATE OR REPLACE FUNCTION teacher_delete_proc_wrapper()
+RETURNS TRIGGER AS
+$$
+DECLARE
+    user_exists BOOLEAN;
+BEGIN
+
+    SELECT TRUE INTO user_exists
+    FROM users
+    WHERE id = OLD.users_id;
+
+    CALL journal_log_proc(OLD.users_id, 9); -- action_type_id: 9 ('Staff has been deleted')
+    CALL archive_teacher_proc(OLD.users_id);
+
+    IF user_exists THEN
+        CALL users_delete_proc(OLD.users_id);
+    END IF;
+
+    RETURN OLD;
+END;
+$$
+LANGUAGE 'plpgsql';
+
+
+-- trigger to delete user from "users" when corresponding student being deleted
+CREATE TRIGGER teacher_delete_trigger
+AFTER DELETE
+ON "teacher"
+FOR EACH ROW
+EXECUTE PROCEDURE teacher_delete_proc_wrapper();
+
+
+
 
 
 
@@ -205,3 +261,45 @@ EXECUTE PROCEDURE users_delete_student_fnc_wrapper();
 -- select * from users ORDER BY id DESC LIMIT 10;
 -- delete from journal where id = 10;
 -- drop trigger if exists users_add_superuser_trigger on users;
+
+
+
+
+-- CREATE TABLE staff_archive (
+--     id SERIAL PRIMARY KEY,
+--     first_name VARCHAR(50),
+--     last_name VARCHAR(50),
+--     email VARCHAR(150),
+--     journal_id INT REFERENCES journal(id) NOT NULL
+-- );
+
+
+
+
+
+
+-- DROP TRIGGER student_delete_trigger on student;
+-- DROP TRIGGER users_add_superuser_trigger on users;
+-- DROP TRIGGER users_insert_student_trigger on users;
+-- DROP TRIGGER users_insert_teacher_trigger on users;
+
+
+
+
+-- DROP FUNCTION teacher_insert_fnc(new_id INT);
+-- DROP FUNCTION teacher_insert_fnc_wrapper();
+-- DROP FUNCTION student_insert_proc_wrapper();
+-- DROP FUNCTION users_add_superuser_fnc();
+-- DROP FUNCTION student_delete_proc_wrapper();
+
+
+
+
+-- DROP PROCEDURE journal_log_proc(id INT, action_id INT);
+-- DROP PROCEDURE student_insert_proc(new_id INT);
+-- DROP PROCEDURE users_delete_proc(old_id INT);
+-- DROP PROCEDURE archive_proc(old_id INT);
+
+
+
+
