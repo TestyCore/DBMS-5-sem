@@ -249,19 +249,11 @@ EXECUTE PROCEDURE teacher_delete_proc_wrapper();
 -- select * from journal ORDER BY id DESC LIMIT 10;
 -- select * from staff_archive ORDER BY id DESC LIMIT 10;
 -- select * from student_archive ORDER BY id DESC LIMIT 10;
+-- select * from article ORDER BY id DESC LIMIT 10;
+-- select * from review ORDER BY id DESC LIMIT 10;
 -- delete from journal where id = 10;
 -- drop trigger if exists users_add_superuser_trigger on users;
 
-
-
-
--- CREATE TABLE staff_archive (
---     id SERIAL PRIMARY KEY,
---     first_name VARCHAR(50),
---     last_name VARCHAR(50),
---     email VARCHAR(150),
---     journal_id INT REFERENCES journal(id) NOT NULL
--- );
 
 
 
@@ -293,3 +285,26 @@ EXECUTE PROCEDURE teacher_delete_proc_wrapper();
 
 
 
+-- SELECT tgname AS trigger_name
+-- FROM pg_trigger
+-- WHERE tgrelid = 'public.teacher'::regclass;
+
+
+-- ALTER TABLE review
+-- ALTER COLUMN author_id DROP NOT NULL;
+
+
+-- SELECT setval('review_id_seq', 1, false);
+
+
+-- ALTER TABLE review
+-- DROP CONSTRAINT review_author_id_fkey;
+
+
+-- ALTER TABLE review
+-- ADD CONSTRAINT review_author_id_fkey
+-- FOREIGN KEY (author_id) REFERENCES users(id)
+-- ON DELETE SET NULL;
+
+
+-- DELETE FROM review;
