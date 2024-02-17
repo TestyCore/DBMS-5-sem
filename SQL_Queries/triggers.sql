@@ -308,3 +308,12 @@ EXECUTE PROCEDURE teacher_delete_proc_wrapper();
 
 
 -- DELETE FROM review;
+
+-- CREATE OR REPLACE FUNCTION add_numbers(a INT, b INT)
+-- RETURNS INT AS $$
+-- BEGIN
+--     RETURN a + b;
+-- END;
+-- $$ LANGUAGE plpgsql;
+
+-- SELECT add_numbers(3, 4);

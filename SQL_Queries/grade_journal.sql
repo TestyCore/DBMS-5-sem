@@ -11,3 +11,5 @@ insert into grade_journal (grade, student_id, subject_id, date) values (8, 1000,
 insert into grade_journal (grade, student_id, subject_id, date) values (9, 1000, 6, '4/2/2023');
 insert into grade_journal (grade, student_id, subject_id, date) values (6, 1000, 7, '3/6/2023');
 insert into grade_journal (grade, student_id, subject_id, date) values (8, 1000, 8, '5/19/2023');
+insert into grade_journal (grade, student_id, subject_id, date) values (7, 1000, 9, '5/19/2023');
+insert into grade_journal (grade, student_id, subject_id, date) values (2, 1000, 10, '5/19/2023');

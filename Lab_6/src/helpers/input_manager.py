@@ -1,14 +1,16 @@
-from src.helpers.constants.messages import GUEST_COMMANDS
+from src.helpers.constants.messages import get_commands
 
 
 class Input:
     @classmethod
-    def command_parse(cls, prompt: str) -> str:
+    def command_parse(cls, prompt: str, role: str) -> str:
         """Returns command extracted from prompt"""
 
         comm = prompt
 
-        if comm not in GUEST_COMMANDS.keys():  # Check if such command exists
+        commands = get_commands(role)
+
+        if comm not in commands.keys():  # Check if such command exists
             return f"Unknown command '{comm}'"
         else:
             return comm
@@ -24,9 +26,10 @@ class Input:
 
         comm = comm_args[0]  # Get command
 
-        if comm not in GUEST_COMMANDS.keys():  # Check if such command exists
-            print(f"Unknown command '{comm}'")
-            return tuple()
+
+        # if comm not in ALL_COMMANDS.keys():  # Check if such command exists
+        #     print(f"Unknown command '{comm}'")
+        #     return tuple()
 
         if isgrep:
             return tuple(comm_args[1])
@@ -41,31 +44,53 @@ class Input:
         return tuple(args_list)
 
     @classmethod
-    def get_choice(cls, prompt: str) -> str:
+    def get_choice(cls, prompt: str) -> bool:
         """Returns 'y'(yes) or 'n'(no)"""
 
         while True:
-            choice = input(prompt)
+            choice = input(prompt).lower()
 
-            if choice == 'y' or choice == 'n':
-                return choice
+            if choice == 'y':
+                return True
+            elif choice == 'n':
+                return False
 
-    @classmethod
-    def validate_username(cls, name: str) -> bool:
-        """Checks if name consists only from latin letters"""
-
-        name = name.strip()
-
-        # if match is not None and name == match.group(0):
-        #     return True
-        # else:
-        #     return False
-
-    @classmethod
-    def get_username(cls) -> str:
-        """Returns valid username"""
-
+    @staticmethod
+    def get_valid_username(prompt: str):
         while True:
-            name = input("Login as (username): ")
+            username = input(prompt)
+            if username.isalnum() and all(char.isascii() for char in username):
+                return username
+            else:
+                print("Invalid username. Please use only Latin characters.")
 
-            return name
+    @staticmethod
+    def get_valid_password():
+        while True:
+            password = input("Password: ")
+            if len(password.split()) == 1:
+                return password
+            else:
+                print("Invalid password. Please use a single word without spaces.")
+
+    @staticmethod
+    def get_value_in_range(prompt, min_value, max_value):
+        while True:
+            try:
+                user_input = int(input(prompt))
+                if min_value <= user_input <= max_value:
+                    return user_input
+                else:
+                    print(f"Please enter a value between {min_value} and {max_value}.")
+            except ValueError:
+                print("Invalid input. Please enter a numeric value.")
+
+
+    # @classmethod
+    # def get_username(cls) -> str:
+    #     """Returns valid username"""
+    #
+    #     while True:
+    #         name = input("Login as (username): ")
+    #
+    #         return name

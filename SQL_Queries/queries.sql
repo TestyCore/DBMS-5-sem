@@ -45,6 +45,48 @@ INNER JOIN subject ON subject.id = timetable.subject_id
 INNER JOIN cabinet ON cabinet.id = timetable.cabinet_id
 INNER JOIN lesson_time ON lesson_time.id = timetable.lesson_time_id;
 
+
+
+
+-- SELECT
+--     COUNT(*)
+-- FROM timetable
+-- INNER JOIN class ON class.id = timetable.class_id
+-- INNER JOIN subject ON subject.id = timetable.subject_id
+-- INNER JOIN cabinet ON cabinet.id = timetable.cabinet_id
+-- INNER JOIN lesson_time ON lesson_time.id = timetable.lesson_time_id
+-- INNER JOIN student ON student.class_id = timetable.class_id
+-- WHERE student.id = 1000 AND day_of_week = 'Monday';
+
+SELECT
+    journal.users_id, journal.date, action_type.name
+FROM journal
+INNER JOIN action_type ON journal.action_type_id = action_type.id
+WHERE journal.users_id = 1109;
+
+-- SELECT 
+--     users.id AS "User_id",
+--     subject.name AS "Subject", 
+--     grade_journal.grade AS "Grade", 
+--     grade_journal.date AS "Date"
+-- FROM users
+-- INNER JOIN student ON users.id = student.users_id
+-- INNER JOIN grade_journal ON student.id = grade_journal.student_id
+-- INNER JOIN subject ON grade_journal.subject_id = subject.id WHERE users.id = 1000;
+
+UPDATE users SET first_name = 'fname', last_name = 'lname', username = 'uname', password = 'pwd', email = 'email' where id = 777;
+
+
+SELECT
+    subject.name AS "Subject"
+FROM users
+INNER JOIN teacher ON users.id = teacher.users_id
+INNER JOIN subject ON teacher.subject_id = subject.id
+WHERE users.id = 1045;
+
+
+
+
 -- class_event table
 SELECT 
     class.name AS "class",
